@@ -18,6 +18,10 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ Error al conectar a MongoDB:', err))
 
 // Rutas
+app.get('/', (req, res) => {
+    res.send('API ToDo funcionando 🚀')
+  })
+
 app.get('/tasks', async (req, res) => {
   const tasks = await Task.find()
   res.json(tasks)

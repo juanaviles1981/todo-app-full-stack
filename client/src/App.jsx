@@ -4,6 +4,9 @@ function App() {
   const [tasks, setTasks] = useState([])
   const [newTask, setNewTask] = useState("")
 
+  const API = "https://todo-app-full-stack-hd7e.onrender.com/"
+
+  fetch(`${API}/tasks`)
   // Obtener tareas al iniciar
   useEffect(() => {
     fetch("http://localhost:5000/tasks")
