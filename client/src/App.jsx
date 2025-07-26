@@ -4,12 +4,11 @@ function App() {
   const [tasks, setTasks] = useState([])
   const [newTask, setNewTask] = useState("")
 
-  const API = "https://todo-app-full-stack-hd7e.onrender.com/"
+  const API = "https://todo-app-full-stack-hd7e.onrender.com"
 
-  fetch(`${API}/tasks`)
-  // Obtener tareas al iniciar
+  //Cargar tareas
   useEffect(() => {
-    fetch("http://localhost:5000/tasks")
+    fetch(`${API}/tasks`)
       .then(res => res.json())
       .then(data => setTasks(data))
       .catch(err => console.error("Error cargando tareas:", err))
@@ -19,7 +18,7 @@ function App() {
   const handleAdd = async () => {
     if (newTask.trim() === "") return
 
-    const res = await fetch("http://localhost:5000/tasks", {
+    const res = await fetch(`${API}/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: newTask })
@@ -34,7 +33,7 @@ function App() {
 
   // Eliminar tarea
   const handleDelete = async (id) => {
-    const res = await fetch(`http://localhost:5000/tasks/${id}`, {
+    const res = await fetch(`${API}/tasks/${id}`, {
       method: "DELETE"
     })
 
