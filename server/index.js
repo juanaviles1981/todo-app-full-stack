@@ -38,6 +38,19 @@ app.delete('/tasks/:id', async (req, res) => {
   res.sendStatus(204)
 })
 
+app.patch('/tasks/:id', async (req, res) => {
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      { completed: req.body.completed },
+      { new: true }
+    )
+    res.json(updatedTask)
+  } catch (error) {
+    res.status(400).json({ error: 'Error actualizando tarea' })
+  }
+})
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`)
