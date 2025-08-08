@@ -4,6 +4,8 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [editTaskId, setEditTaskId] = useState(null);
+  const [editText, setEditText] = useState("");
 
   const API = "https://todo-app-full-stack-hd7e.onrender.com";
 
@@ -40,22 +42,13 @@ function App() {
 
   // Eliminar tarea
   const handleDelete = async (id) => {
-    const res = await fetch(`${API}/tasks/${id}`, {
-      method: "DELETE",
-    });
-
+    const res = await fetch(`${API}/tasks/${id}`, { method: "DELETE" });
     if (res.ok) {
       setTasks(tasks.filter((task) => task._id !== id));
     }
   };
 
-  // Manejar Enter para agregar tarea
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleAdd();
-    }
-  };
-
+  // Marcar como completada
   const toggleTask = async (id) => {
     const task = tasks.find((t) => t._id === id);
     const res = await fetch(`${API}/tasks/${id}`, {
@@ -70,14 +63,33 @@ function App() {
     }
   };
 
+  // Guardar edición
+  const handleEditSave = async (id) => {
+    if (editText.trim() === "") return;
+    const res = await fetch(`${API}/tasks/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: editText }),
+    });
+    if (res.ok) {
+      const updatedTask = await res.json();
+      setTasks(tasks.map((t) => (t._id === id ? updatedTask : t)));
+      setEditTaskId(null);
+      setEditText("");
+    }
+  };
+
+  // Manejar Enter en input principal
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") handleAdd();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            📝 Mi Lista de Tareas
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">📝 Mi Lista de Tareas</h1>
           <p className="text-gray-600">Organiza tu día de manera eficiente</p>
         </div>
 
@@ -90,12 +102,12 @@ function App() {
               placeholder="¿Qué necesitas hacer hoy?"
               onChange={(e) => setNewTask(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all duration-200 text-gray-700 placeholder-gray-400"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
             />
             <button
               onClick={handleAdd}
               disabled={!newTask.trim()}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-semibold rounded-lg"
             >
               ➕ Agregar
             </button>
@@ -122,72 +134,77 @@ function App() {
             ) : tasks.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🎉</div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  ¡No tienes tareas pendientes!
-                </h3>
-                <p className="text-gray-600">
-                  Agrega una nueva tarea para comenzar
-                </p>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">¡No tienes tareas pendientes!</h3>
+                <p className="text-gray-600">Agrega una nueva tarea para comenzar</p>
               </div>
             ) : (
               <ul className="space-y-3">
-                {tasks.map((task, index) => (
+                {tasks.map((task) => (
                   <li
                     key={task._id}
-                    className="group flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 border border-gray-200 hover:border-gray-300"
+                    className="group flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
                   >
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                      <span
-                        className={`text-gray-800 font-medium ${
-                          task.completed ? "line-through text-gray-400" : ""
-                        }`}
-                      >
-                        {task.text}
-                      </span>
+                      {editTaskId === task._id ? (
+                        <input
+                          type="text"
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleEditSave(task._id)}
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded"
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          className={`text-gray-800 font-medium ${
+                            task.completed ? "line-through text-gray-400" : ""
+                          }`}
+                        >
+                          {task.text}
+                        </span>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleDelete(task._id)}
-                      className="opacity-0 group-hover:opacity-100 ml-4 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 focus:opacity-100 focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                      title="Eliminar tarea"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+
+                    {editTaskId === task._id ? (
+                      <button
+                        onClick={() => handleEditSave(task._id)}
+                        className="ml-4 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => toggleTask(task._id)}
-                      className={`ml-4 p-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                        task.completed
-                          ? "text-green-600 hover:text-green-800 hover:bg-green-100"
-                          : "text-gray-400 hover:text-indigo-600 hover:bg-indigo-100"
-                      }`}
-                      title="Marcar como completada"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </button>
+                        Guardar
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditTaskId(task._id);
+                            setEditText(task.text);
+                          }}
+                          className="ml-4 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                          title="Editar tarea"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDelete(task._id)}
+                          className="ml-2 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                          title="Eliminar tarea"
+                        >
+                          🗑️
+                        </button>
+                        <button
+                          onClick={() => toggleTask(task._id)}
+                          className={`ml-2 p-2 rounded-lg ${
+                            task.completed
+                              ? "text-green-600 hover:text-green-800 hover:bg-green-100"
+                              : "text-gray-400 hover:text-indigo-600 hover:bg-indigo-100"
+                          }`}
+                          title="Marcar como completada"
+                        >
+                          ✔️
+                        </button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>

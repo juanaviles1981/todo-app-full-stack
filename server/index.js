@@ -19,8 +19,8 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Rutas
 app.get('/', (req, res) => {
-    res.send('API ToDo funcionando 🚀')
-  })
+  res.send('API ToDo funcionando 🚀')
+})
 
 app.get('/tasks', async (req, res) => {
   const tasks = await Task.find()
@@ -38,6 +38,7 @@ app.delete('/tasks/:id', async (req, res) => {
   res.sendStatus(204)
 })
 
+// Cambiar estado completado
 app.patch('/tasks/:id', async (req, res) => {
   try {
     const updatedTask = await Task.findByIdAndUpdate(
@@ -48,6 +49,20 @@ app.patch('/tasks/:id', async (req, res) => {
     res.json(updatedTask)
   } catch (error) {
     res.status(400).json({ error: 'Error actualizando tarea' })
+  }
+})
+
+// Editar texto de tarea
+app.put('/tasks/:id', async (req, res) => {
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      { text: req.body.text },
+      { new: true }
+    )
+    res.json(updatedTask)
+  } catch (error) {
+    res.status(400).json({ error: 'Error editando tarea' })
   }
 })
 
